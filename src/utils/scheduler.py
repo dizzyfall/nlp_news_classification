@@ -8,7 +8,7 @@ import numpy as np
 
 
 class BERTScheduler():
-    def __init__(self, optimizer, num_hiddens, warmup_steps, current_step=0):
+    def __init__(self, optimizer, num_hiddens=768, warmup_steps=10000, current_step=0):
         """
 
         Args:

@@ -28,9 +28,9 @@ dropout = 0.1
 devices = environment.try_all_gpus()
 
 pretrained_vocab_relative_path = "../../pretrain_results/vocab.txt"
-checkpoints_relative_path = "../../pretrain_results/checkpoints/checkpoint_step_10/checkpoint_step_10.pth"
-ft_train_set_relative_path = "../../dataset/train/fine_tuning/train/fine_tuning_train_set_test.txt"
-ft_validate_set_relative_path = "../../dataset/train/fine_tuning/validate/fine_tuning_validate_set_test.txt"
+checkpoints_relative_path = "../../pretrain_results/checkpoints/checkpoint_step_60000/checkpoint_step_60000.pth"
+ft_train_set_relative_path = "../../dataset/train/fine_tuning/train/fine_tuning_train_set.txt"
+ft_validate_set_relative_path = "../../dataset/train/fine_tuning/validate/fine_tuning_validate_set.txt"
 ft_checkpoints_relative_path = "../../fine_tuning_results"
 
 pretrained_bert, pretrained_vocab = fine_tuning_bert.load_pretrained_model(query_size, key_size, value_size,

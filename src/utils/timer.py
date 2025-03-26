@@ -10,8 +10,11 @@ import numpy as np
 
 
 class Timer():
-    def __init__(self):
-        self.steps_time = []
+    def __init__(self,steps_time=None):
+        if steps_time is None:
+            self.steps_time = []
+        else:
+            self.steps_time = steps_time
 
     def start(self):
         self.start_time = time.time()

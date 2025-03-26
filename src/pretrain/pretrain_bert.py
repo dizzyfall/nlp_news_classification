@@ -10,19 +10,6 @@ from torch import nn
 from src.utils import timer, checkpoints
 
 
-def load_pretrain_checkpoint(model, optimizer, device, checkpoint_relative_path=None):
-    if checkpoint_relative_path is None:
-        step = 0
-        total_mlm_loss = 0.0
-        total_processed_samples = 0.0
-        cum_time_list = []
-        return step, total_mlm_loss, total_processed_samples, cum_time_list
-    step, total_mlm_loss, total_processed_samples, cum_time_list = checkpoints.load_checkpoint(model,
-                                                                                               checkpoint_relative_path,
-                                                                                               device, optimizer)
-    return step, total_mlm_loss, total_processed_samples, cum_time_list
-
-
 class PretrainBERT():
     def __init__(self, current_step=0, total_mlm_loss=0.0, total_processed_samples=0.0, cum_time_list=None):
         if cum_time_list is None:
@@ -43,10 +30,10 @@ class PretrainBERT():
                  num_pretrain_iter_steps,
                  checkpoints_relative_path, devices):
         net = nn.DataParallel(net, device_ids=devices).to(devices[0])
-        pretrain_timer = timer.Timer()
+        pretrain_timer = timer.Timer(self.cum_time_list)
         num_pretrain_iter_steps_reached = False
-        save_checkpoint_interval = 1000
-        pretrain_info_interval = 100
+        save_checkpoint_interval = 10
+        pretrain_info_interval = 10
 
         print("start pretraining...")
         while self.current_step < num_pretrain_iter_steps and not num_pretrain_iter_steps_reached:

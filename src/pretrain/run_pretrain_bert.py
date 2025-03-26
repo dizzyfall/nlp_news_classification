@@ -9,15 +9,14 @@ from torch import nn
 
 from src.model import bert
 from src.pretrain import pretrain_data_create, pretrain_bert
-from src.utils import environment, scheduler
+from src.utils import environment, scheduler, checkpoints
 
 batch_size, max_len = 128, 256
 pretrain_data_relative_path = "../../dataset/train/pretrain/pretrain_sentences_test.txt"
 # pretrain_data_relative_path = "../../dataset/train/pretrain/pretrain_sentences_128.txt"
 vocab_txt_relative_path = "../../pretrain_results/vocab.txt"
 checkpoints_relative_path = "../../pretrain_results/checkpoints"
-# checkpoint_relative_path = "../../pretrain_results/checkpoints/checkpoint_step_10/checkpoint_step_10.pth"
-
+checkpoint_relative_path = "../../pretrain_results/checkpoints/checkpoint_step_10/checkpoint_step_10.pth"
 
 pretrain_iter, vocab = pretrain_data_create.load_pretrain_data(pretrain_data_relative_path, vocab_txt_relative_path,
                                                                batch_size, max_len)
@@ -47,16 +46,33 @@ net = bert.BERTLM(vocab_size, query_size, key_size, value_size, num_hiddens, nor
 
 devices = environment.try_all_gpus()
 loss = nn.CrossEntropyLoss()
-
 pretrain_optimizer = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=0.01)
-pretrain_scheduler = scheduler.BERTScheduler(pretrain_optimizer, num_hiddens, warmup_steps=10000)
 
-step, total_mlm_loss, total_processed_samples, cum_time_list = pretrain_bert.load_pretrain_checkpoint(net,
-                                                                                                      pretrain_optimizer,
-                                                                                                      devices[0],
-                                                                                                      checkpoint_relative_path=None)
+use_checkpoint = True
+if not use_checkpoint:
+    step, total_mlm_loss, total_processed_samples, cum_time_list = checkpoints.load_pretrain_checkpoint(net,
+                                                                                                        devices[0],
+                                                                                                        pretrain_optimizer,
+                                                                                                        checkpoint_relative_path=None,
+                                                                                                        use_checkpoint=use_checkpoint)
 
-pretrainbert = pretrain_bert.PretrainBERT(step, total_mlm_loss, total_processed_samples, cum_time_list)
-pretrainbert.pretrain(pretrain_iter, net, loss, vocab_size, pretrain_optimizer, pretrain_scheduler,
-                      num_pretrain_iter_steps,
-                      checkpoints_relative_path, devices)
+    pretrain_scheduler = scheduler.BERTScheduler(pretrain_optimizer, num_hiddens, warmup_steps=10000)
+    pretrainbert = pretrain_bert.PretrainBERT(step, total_mlm_loss, total_processed_samples, cum_time_list)
+    pretrainbert.pretrain(pretrain_iter, net, loss, vocab_size, pretrain_optimizer, pretrain_scheduler,
+                          num_pretrain_iter_steps,
+                          checkpoints_relative_path, devices)
+else:
+    step, total_mlm_loss, total_processed_samples, cum_time_list, pretrain_scheduler = checkpoints.load_pretrain_checkpoint(
+                                                                                                                                net,
+                                                                                                                                devices[0],
+                                                                                                                                pretrain_optimizer,
+                                                                                                                                checkpoint_relative_path=checkpoint_relative_path,
+                                                                                                                                use_checkpoint=use_checkpoint)
+
+    print(cum_time_list)
+    pretrainbert = pretrain_bert.PretrainBERT(step, total_mlm_loss, total_processed_samples, cum_time_list)
+    pretrainbert.pretrain(pretrain_iter, net, loss, vocab_size, pretrain_optimizer, pretrain_scheduler,
+                          num_pretrain_iter_steps,
+                          checkpoints_relative_path, devices)
+
+
